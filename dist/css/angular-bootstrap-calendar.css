@@ -416,10 +416,6 @@ mwl-calendar .cal-month-box .cal-row-fluid {
   margin-left: 0px;
   margin-right: 0px;
 }
-mwl-calendar .cal-year-box .row:last-child,
-mwl-calendar .cal-month-box .cal-row-fluid:last-child {
-  border-bottom: 0px;
-}
 mwl-calendar .cal-month-box,
 mwl-calendar .cal-year-box,
 mwl-calendar .cal-week-box {

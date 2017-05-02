@@ -47,7 +47,7 @@ angular
     },
     dateFormatter: 'angular',
     showTimesOnWeekView: false,
-    displayAllMonthEvents: false,
+    displayAllMonthEvents: true,
     i18nStrings: {
       weekNumber: 'Week {week}'
     },

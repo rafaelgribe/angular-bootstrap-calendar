@@ -5,7 +5,7 @@ var LOG_PREFIX = 'Bootstrap calendar:';
 
 angular
   .module('mwl.calendar')
-  .controller('MwlCalendarCtrl', function($scope, $log, $timeout, $attrs, $locale, moment, calendarTitle, calendarHelper) {
+  .controller('MwlCalendarCtrl', function($scope, $log, $timeout, $attrs, moment, calendarTitle, calendarHelper) {
 
     var vm = this;
 
@@ -31,12 +31,6 @@ angular
     };
 
     vm.$onInit = function() {
-
-      if (vm.slideBoxDisabled) {
-        $log.warn(LOG_PREFIX, 'The `slide-box-disabled` option is deprecated and will be removed in the next release. ' +
-          'Instead set `cell-auto-open-disabled` to true');
-      }
-
       vm.events = vm.events || [];
 
       var previousDate = moment(vm.viewDate);
@@ -94,25 +88,15 @@ angular
       calendarHelper.loadTemplates().then(function() {
         vm.templatesLoaded = true;
 
-        var eventsWatched = false;
+        if (!vm.dontWatch) {
+          // Refresh the calendar when any of these variables change.
+          $scope.$watchGroup([
+            'vm.viewDate',
+            'vm.view'
+          ], refreshCalendar);
+        }
 
-        //Refresh the calendar when any of these variables change.
-        $scope.$watchGroup([
-          'vm.viewDate',
-          'vm.view',
-          'vm.cellIsOpen',
-          function() {
-            return moment.locale() + $locale.id; //Auto update the calendar when the locale changes
-          }
-        ], function() {
-          if (!eventsWatched) {
-            eventsWatched = true;
-            //need to deep watch events hence why it isn't included in the watch group
-            $scope.$watch('vm.events', refreshCalendar, true); //this will call refreshCalendar when the watcher starts (i.e. now)
-          } else {
-            refreshCalendar();
-          }
-        });
+        $scope.$watch('vm.events', refreshCalendar, true); //this will call refreshCalendar when the watcher starts (i.e. now)
 
       }).catch(function(err) {
         $log.error('Could not load all calendar templates', err);
@@ -135,15 +119,12 @@ angular
         view: '=',
         viewTitle: '=?',
         viewDate: '=',
-        cellIsOpen: '=?',
-        cellAutoOpenDisabled: '=?',
-        slideBoxDisabled: '=?',
         customTemplateUrls: '=?',
         draggableAutoScroll: '=?',
-        onEventClick: '&',
-        onEventTimesChanged: '&',
-        onTimespanClick: '&',
-        onDateRangeSelect: '&?',
+        onEventClick: '=',
+        onEventTimesChanged: '=',
+        onTimespanClick: '=',
+        onDateRangeSelect: '=?',
         onViewChangeClick: '&',
         cellModifier: '&',
         dayViewStart: '@',
@@ -152,7 +133,8 @@ angular
         dayViewEventChunkSize: '@',
         dayViewEventWidth: '@',
         templateScope: '=?',
-        dayViewTimePosition: '@'
+        dayViewTimePosition: '@',
+        dontWatch: '@'
       },
       controller: 'MwlCalendarCtrl as vm',
       bindToController: true

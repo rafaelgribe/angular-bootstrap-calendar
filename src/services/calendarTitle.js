@@ -4,17 +4,7 @@ var angular = require('angular');
 
 angular
   .module('mwl.calendar')
-  .factory('calendarTitle', function(moment, calendarConfig, calendarHelper) {
-
-    function day(viewDate) {
-      return calendarHelper.formatDate(viewDate, calendarConfig.titleFormats.day);
-    }
-
-    function week(viewDate) {
-      return calendarConfig.titleFormats.week
-        .replace('{week}', moment(viewDate).isoWeek())
-        .replace('{year}', moment(viewDate).startOf('isoweek').format('YYYY'));
-    }
+  .factory('calendarTitle', function(calendarConfig, calendarHelper) {
 
     function month(viewDate) {
       return calendarHelper.formatDate(viewDate, calendarConfig.titleFormats.month);
@@ -25,8 +15,6 @@ angular
     }
 
     return {
-      day: day,
-      week: week,
       month: month,
       year: year
     };

@@ -11,20 +11,6 @@ angular
     vm.calendarEventTitle = calendarEventTitle;
     vm.openRowIndex = null;
 
-    function toggleCell() {
-      vm.openRowIndex = null;
-      vm.openDayIndex = null;
-
-      if (vm.cellIsOpen && vm.view) {
-        vm.view.forEach(function(day, dayIndex) {
-          if (moment(vm.viewDate).startOf('day').isSame(day.date)) {
-            vm.openDayIndex = dayIndex;
-            vm.openRowIndex = Math.floor(dayIndex / 7);
-          }
-        });
-      }
-    }
-
     $scope.$on('calendar.refreshView', function() {
 
       vm.weekDays = calendarHelper.getWeekDayNames();
@@ -33,43 +19,14 @@ angular
       vm.view = monthView.days;
       vm.monthOffsets = monthView.rowOffsets;
 
-      if (vm.cellAutoOpenDisabled) {
-        toggleCell();
-      } else if (!vm.cellAutoOpenDisabled && vm.cellIsOpen && vm.openRowIndex === null) {
-        //Auto open the calendar to the current day if set
-        vm.openDayIndex = null;
-        vm.view.forEach(function(day) {
-          if (day.inMonth && moment(vm.viewDate).startOf('day').isSame(day.date)) {
-            vm.dayClicked(day, true);
-          }
-        });
-      }
-
     });
 
     vm.dayClicked = function(day, dayClickedFirstRun, $event) {
 
-      if (!dayClickedFirstRun) {
-        vm.onTimespanClick({
-          calendarDate: day.date.toDate(),
-          calendarCell: day,
-          $event: $event
-        });
+      if (!dayClickedFirstRun && vm.onTimespanClick) {
+        vm.onTimespanClick(day.date.toDate(), day, $event);
         if ($event && $event.defaultPrevented) {
           return;
-        }
-      }
-
-      if (!vm.cellAutoOpenDisabled) {
-        vm.openRowIndex = null;
-        var dayIndex = vm.view.indexOf(day);
-        if (dayIndex === vm.openDayIndex) { //the day has been clicked and is already open
-          vm.openDayIndex = null; //close the open day
-          vm.cellIsOpen = false;
-        } else {
-          vm.openDayIndex = dayIndex;
-          vm.openRowIndex = Math.floor(dayIndex / 7);
-          vm.cellIsOpen = true;
         }
       }
 
@@ -93,19 +50,19 @@ angular
     vm.handleEventDrop = function(event, newDayDate, draggedFromDate) {
 
       var newStart = moment(event.startsAt)
-        .date(moment(newDayDate).date())
+        .year(moment(newDayDate).year())
         .month(moment(newDayDate).month())
-        .year(moment(newDayDate).year());
+        .date(moment(newDayDate).date());
 
       var newEnd = calendarHelper.adjustEndDateFromStartDiff(event.startsAt, newStart, event.endsAt);
 
-      vm.onEventTimesChanged({
-        calendarEvent: event,
-        calendarDate: newDayDate,
-        calendarNewEventStart: newStart.toDate(),
-        calendarNewEventEnd: newEnd ? newEnd.toDate() : null,
-        calendarDraggedFromDate: draggedFromDate
-      });
+      vm.onEventTimesChanged(
+        event,
+        newDayDate,
+        newStart.toDate(),
+        newEnd ? newEnd.toDate() : null,
+        draggedFromDate
+      );
     };
 
     vm.getWeekNumberLabel = function(day) {
@@ -143,21 +100,6 @@ angular
       delete vm.dateRangeSelect;
     };
 
-    vm.$onInit = function() {
-
-      if (vm.cellAutoOpenDisabled) {
-        $scope.$watchGroup([
-          'vm.cellIsOpen',
-          'vm.viewDate'
-        ], toggleCell);
-      }
-
-    };
-
-    if (angular.version.minor < 5) {
-      vm.$onInit();
-    }
-
   })
   .directive('mwlCalendarMonth', function() {
 
@@ -171,8 +113,6 @@ angular
         onEventClick: '=',
         onEventTimesChanged: '=',
         onDateRangeSelect: '=',
-        cellIsOpen: '=',
-        cellAutoOpenDisabled: '=',
         onTimespanClick: '=',
         cellModifier: '=',
         slideBoxDisabled: '=',

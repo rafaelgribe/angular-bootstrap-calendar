@@ -98,13 +98,7 @@ angular
         });
 
       }
-    });
-
-    $scope.$watch($attrs.mwlDraggable, function(enabled) {
-      interact($element[0]).draggable({
-        enabled: enabled
-      });
-    });
+    }).styleCursor(false);
 
     $scope.$on('$destroy', function() {
       interact($element[0]).unset();
