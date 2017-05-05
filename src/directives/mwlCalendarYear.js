@@ -10,7 +10,7 @@ angular
     vm.openMonthIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
-      vm.view = calendarHelper.getYearView(vm.events, vm.viewDate, vm.cellModifier);
+      vm.view = calendarHelper.getYearView(vm.events, vm.viewDate, vm.cellModifier, vm.today);
     });
 
     vm.monthClicked = function(month, monthClickedFirstRun, $event) {
@@ -54,7 +54,8 @@ angular
         cellModifier: '=',
         slideBoxDisabled: '=',
         customTemplateUrls: '=?',
-        templateScope: '='
+        templateScope: '=',
+        today: '='
       },
       controller: 'MwlCalendarYearCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {

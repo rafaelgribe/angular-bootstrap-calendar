@@ -1,23 +1,43 @@
-<div class="cal-row-fluid cal-row-head">
-
-  <div class="cal-cell1" ng-repeat="day in vm.weekDays track by $index" ng-bind="day"></div>
-
-</div>
-<div class="cal-month-box">
-
-  <div ng-repeat="rowOffset in vm.monthOffsets track by rowOffset">
-    <div class="cal-row-fluid cal-before-eventlist">
-      <div
-        ng-repeat="day in vm.view | calendarLimitTo:7:rowOffset track by $index"
-        ng-init="dayIndex = vm.view.indexOf(day)"
-        class="cal-cell1 cal-cell {{ day.highlightClass }}"
-        ng-style="{backgroundColor: day.backgroundColor}"
+<table class="cal-table table-bordered cal-month-box">
+  <thead>
+    <tr>
+      <th ng-repeat="day in vm.weekDays track by $index" ng-bind="day"></th>      
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="rowOffset in vm.monthOffsets track by rowOffset">
+      <td ng-repeat="day in vm.view | calendarLimitTo:7:rowOffset track by $index"
+        class="cal-cell"
+        ng-class="{'cal-day-today': day.isToday}"
         ng-click="vm.dayClicked(day, false, $event)"
-        ng-class="{pointer: day.events.length > 0}">
-        <ng-include src="vm.customTemplateUrls.calendarMonthCell || vm.calendarConfig.templates.calendarMonthCell"></ng-include>
-      </div>
-    </div>
+        mwl-droppable
+        on-drop="vm.handleEventDrop(dropData.event, day.date, dropData.draggedFromDate)"
+        role="gridcell">
+        <div
+          class="cal-month-day {{ ::day.cssClass }}"
+          ng-class="{'cal-day-outmonth': !day.inMonth}">        
 
-  </div>
+          <div class="text-right">
+            <span data-cal-date ng-bind="day.label"></span>
+          </div>
 
-</div>
+          <div class="events-list" ng-show="day.events.length > 0">
+            <a
+              ng-repeat="event in day.events | orderBy:'startsAt' track by event.calendarEventId"
+              href="javascript:;"
+              ng-click="$event.stopPropagation(); vm.onEventClick(event)"
+              class="event"
+              ng-class="event.cssClass"
+              ng-style="{backgroundColor: event.color.primary}"
+              mwl-draggable="event.draggable !== false"
+              drop-data="{event: event, draggedFromDate: day.date.toDate()}"
+              auto-scroll="vm.draggableAutoScroll"
+              ng-bind="event.title">
+            </a>
+          </div>
+
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>

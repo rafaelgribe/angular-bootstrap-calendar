@@ -103,7 +103,7 @@ angular
       return weekdays;
     }
 
-    function getYearView(events, viewDate, cellModifier) {
+    function getYearView(events, viewDate, cellModifier, today) {
 
       var view = [];
       var eventsInPeriod = getEventsInPeriod(viewDate, 'year', events);
@@ -115,7 +115,7 @@ angular
         var periodEvents = filterEventsInPeriod(eventsInPeriod, startPeriod, endPeriod);
         var cell = {
           label: formatDate(startPeriod, calendarConfig.dateFormats.month),
-          isToday: startPeriod.isSame(moment().startOf('month')),
+          isToday: startPeriod.isSame(today ? moment(today).startOf('month') : moment().startOf('month')),
           events: periodEvents,
           date: startPeriod,
           badgeTotal: getBadgeTotal(periodEvents)
@@ -139,7 +139,7 @@ angular
       return event;
     }
 
-    function getMonthView(events, viewDate, cellModifier) {
+    function getMonthView(events, viewDate, cellModifier, today) {
 
       // hack required to work with the calendar-utils api
       events.forEach(function(event) {
@@ -160,6 +160,9 @@ angular
         day.date = moment(day.date);
         day.label = day.date.date();
         day.badgeTotal = getBadgeTotal(day.events);
+        if (today) {
+          day.isToday = day.date.isSame(today, 'day');
+        }
         if (!calendarConfig.displayAllMonthEvents && !day.inMonth) {
           day.events = [];
         }

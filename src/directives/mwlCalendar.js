@@ -88,15 +88,21 @@ angular
       calendarHelper.loadTemplates().then(function() {
         vm.templatesLoaded = true;
 
-        if (!vm.dontWatch) {
-          // Refresh the calendar when any of these variables change.
-          $scope.$watchGroup([
-            'vm.viewDate',
-            'vm.view'
-          ], refreshCalendar);
-        }
+        // Refresh the calendar when any of these variables change.
+        $scope.$watchGroup([
+          'vm.viewDate',
+          'vm.view',
+        ], function(newVal, oldVal) {
+          if (newVal !== oldVal) {
+            refreshCalendar();
+          }
+        });
 
-        $scope.$watch('vm.events', refreshCalendar, true); //this will call refreshCalendar when the watcher starts (i.e. now)
+        $scope.$watch('vm.events', function(newVal, oldVal) {
+          if (!angular.equals(newVal, oldVal)) {
+            refreshCalendar();
+          }
+        }, true);
 
       }).catch(function(err) {
         $log.error('Could not load all calendar templates', err);
@@ -134,7 +140,7 @@ angular
         dayViewEventWidth: '@',
         templateScope: '=?',
         dayViewTimePosition: '@',
-        dontWatch: '@'
+        today: '='
       },
       controller: 'MwlCalendarCtrl as vm',
       bindToController: true

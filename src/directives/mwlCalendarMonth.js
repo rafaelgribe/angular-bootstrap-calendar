@@ -4,7 +4,7 @@ var angular = require('angular');
 
 angular
   .module('mwl.calendar')
-  .controller('MwlCalendarMonthCtrl', function($scope, moment, calendarHelper, calendarConfig, calendarEventTitle) {
+  .controller('MwlCalendarMonthCtrl', function($scope, $timeout, moment, calendarHelper, calendarConfig, calendarEventTitle) {
 
     var vm = this;
     vm.calendarConfig = calendarConfig;
@@ -12,14 +12,18 @@ angular
     vm.openRowIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
+      vm.refreshView();
+    });
 
+    vm.refreshView = function() {
       vm.weekDays = calendarHelper.getWeekDayNames();
 
-      var monthView = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier);
-      vm.view = monthView.days;
-      vm.monthOffsets = monthView.rowOffsets;
-
-    });
+      $timeout(function() {
+        var monthView = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier, vm.today);
+        vm.view = monthView.days;
+        vm.monthOffsets = monthView.rowOffsets;
+      });
+    };
 
     vm.dayClicked = function(day, dayClickedFirstRun, $event) {
 
@@ -74,32 +78,6 @@ angular
       }
     };
 
-    vm.onDragSelectStart = function(day) {
-      if (!vm.dateRangeSelect) {
-        vm.dateRangeSelect = {
-          startDate: day.date,
-          endDate: day.date
-        };
-      }
-    };
-
-    vm.onDragSelectMove = function(day) {
-      if (vm.dateRangeSelect) {
-        vm.dateRangeSelect.endDate = day.date;
-      }
-    };
-
-    vm.onDragSelectEnd = function(day) {
-      vm.dateRangeSelect.endDate = day.date;
-      if (vm.dateRangeSelect.endDate > vm.dateRangeSelect.startDate) {
-        vm.onDateRangeSelect({
-          calendarRangeStartDate: vm.dateRangeSelect.startDate.clone().startOf('day').toDate(),
-          calendarRangeEndDate: vm.dateRangeSelect.endDate.clone().endOf('day').toDate()
-        });
-      }
-      delete vm.dateRangeSelect;
-    };
-
   })
   .directive('mwlCalendarMonth', function() {
 
@@ -118,11 +96,13 @@ angular
         slideBoxDisabled: '=',
         customTemplateUrls: '=?',
         templateScope: '=',
-        draggableAutoScroll: '='
+        draggableAutoScroll: '=',
+        today: '='
       },
       controller: 'MwlCalendarMonthCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {
         scope.vm.calendarCtrl = calendarCtrl;
+        scope.vm.refreshView();
       },
       bindToController: true
     };

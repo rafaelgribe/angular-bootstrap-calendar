@@ -1851,15 +1851,21 @@ angular
       calendarHelper.loadTemplates().then(function() {
         vm.templatesLoaded = true;
 
-        if (!vm.dontWatch) {
-          // Refresh the calendar when any of these variables change.
-          $scope.$watchGroup([
-            'vm.viewDate',
-            'vm.view'
-          ], refreshCalendar);
-        }
+        // Refresh the calendar when any of these variables change.
+        $scope.$watchGroup([
+          'vm.viewDate',
+          'vm.view',
+        ], function(newVal, oldVal) {
+          if (newVal !== oldVal) {
+            refreshCalendar();
+          }
+        });
 
-        $scope.$watch('vm.events', refreshCalendar, true); //this will call refreshCalendar when the watcher starts (i.e. now)
+        $scope.$watch('vm.events', function(newVal, oldVal) {
+          if (!angular.equals(newVal, oldVal)) {
+            refreshCalendar();
+          }
+        }, true);
 
       }).catch(function(err) {
         $log.error('Could not load all calendar templates', err);
@@ -1897,7 +1903,7 @@ angular
         dayViewEventWidth: '@',
         templateScope: '=?',
         dayViewTimePosition: '@',
-        dontWatch: '@'
+        today: '='
       },
       controller: 'MwlCalendarCtrl as vm',
       bindToController: true
@@ -1917,7 +1923,7 @@ var angular = __webpack_require__(0);
 
 angular
   .module('mwl.calendar')
-  .controller('MwlCalendarMonthCtrl', ["$scope", "moment", "calendarHelper", "calendarConfig", "calendarEventTitle", function($scope, moment, calendarHelper, calendarConfig, calendarEventTitle) {
+  .controller('MwlCalendarMonthCtrl', ["$scope", "$timeout", "moment", "calendarHelper", "calendarConfig", "calendarEventTitle", function($scope, $timeout, moment, calendarHelper, calendarConfig, calendarEventTitle) {
 
     var vm = this;
     vm.calendarConfig = calendarConfig;
@@ -1925,14 +1931,18 @@ angular
     vm.openRowIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
+      vm.refreshView();
+    });
 
+    vm.refreshView = function() {
       vm.weekDays = calendarHelper.getWeekDayNames();
 
-      var monthView = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier);
-      vm.view = monthView.days;
-      vm.monthOffsets = monthView.rowOffsets;
-
-    });
+      $timeout(function() {
+        var monthView = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier, vm.today);
+        vm.view = monthView.days;
+        vm.monthOffsets = monthView.rowOffsets;
+      });
+    };
 
     vm.dayClicked = function(day, dayClickedFirstRun, $event) {
 
@@ -1963,9 +1973,9 @@ angular
     vm.handleEventDrop = function(event, newDayDate, draggedFromDate) {
 
       var newStart = moment(event.startsAt)
-        .date(moment(newDayDate).date())
+        .year(moment(newDayDate).year())
         .month(moment(newDayDate).month())
-        .year(moment(newDayDate).year());
+        .date(moment(newDayDate).date());
 
       var newEnd = calendarHelper.adjustEndDateFromStartDiff(event.startsAt, newStart, event.endsAt);
 
@@ -1987,32 +1997,6 @@ angular
       }
     };
 
-    vm.onDragSelectStart = function(day) {
-      if (!vm.dateRangeSelect) {
-        vm.dateRangeSelect = {
-          startDate: day.date,
-          endDate: day.date
-        };
-      }
-    };
-
-    vm.onDragSelectMove = function(day) {
-      if (vm.dateRangeSelect) {
-        vm.dateRangeSelect.endDate = day.date;
-      }
-    };
-
-    vm.onDragSelectEnd = function(day) {
-      vm.dateRangeSelect.endDate = day.date;
-      if (vm.dateRangeSelect.endDate > vm.dateRangeSelect.startDate) {
-        vm.onDateRangeSelect({
-          calendarRangeStartDate: vm.dateRangeSelect.startDate.clone().startOf('day').toDate(),
-          calendarRangeEndDate: vm.dateRangeSelect.endDate.clone().endOf('day').toDate()
-        });
-      }
-      delete vm.dateRangeSelect;
-    };
-
   }])
   .directive('mwlCalendarMonth', function() {
 
@@ -2031,11 +2015,13 @@ angular
         slideBoxDisabled: '=',
         customTemplateUrls: '=?',
         templateScope: '=',
-        draggableAutoScroll: '='
+        draggableAutoScroll: '=',
+        today: '='
       },
       controller: 'MwlCalendarMonthCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {
         scope.vm.calendarCtrl = calendarCtrl;
+        scope.vm.refreshView();
       },
       bindToController: true
     };
@@ -2060,7 +2046,7 @@ angular
     vm.openMonthIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
-      vm.view = calendarHelper.getYearView(vm.events, vm.viewDate, vm.cellModifier);
+      vm.view = calendarHelper.getYearView(vm.events, vm.viewDate, vm.cellModifier, vm.today);
     });
 
     vm.monthClicked = function(month, monthClickedFirstRun, $event) {
@@ -2104,7 +2090,8 @@ angular
         cellModifier: '=',
         slideBoxDisabled: '=',
         customTemplateUrls: '=?',
-        templateScope: '='
+        templateScope: '=',
+        today: '='
       },
       controller: 'MwlCalendarYearCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {
@@ -2608,7 +2595,7 @@ angular
           hour: 'ha',
           day: 'd MMM',
           month: 'MMMM',
-          weekDay: 'EEEE',
+          weekDay: 'EEE',
           time: 'HH:mm',
           datetime: 'MMM d, h:mm a'
         },
@@ -2624,7 +2611,7 @@ angular
           hour: 'ha',
           day: 'D MMM',
           month: 'MMMM',
-          weekDay: 'dddd',
+          weekDay: 'ddd',
           time: 'HH:mm',
           datetime: 'MMM D, h:mm a'
         },
@@ -2642,7 +2629,7 @@ angular
     get titleFormats() {
       return this.allDateFormats[this.dateFormatter].title;
     },
-    dateFormatter: 'angular',
+    dateFormatter: 'moment',
     showTimesOnWeekView: false,
     displayAllMonthEvents: true,
     i18nStrings: {
@@ -2822,7 +2809,7 @@ angular
       return weekdays;
     }
 
-    function getYearView(events, viewDate, cellModifier) {
+    function getYearView(events, viewDate, cellModifier, today) {
 
       var view = [];
       var eventsInPeriod = getEventsInPeriod(viewDate, 'year', events);
@@ -2834,7 +2821,7 @@ angular
         var periodEvents = filterEventsInPeriod(eventsInPeriod, startPeriod, endPeriod);
         var cell = {
           label: formatDate(startPeriod, calendarConfig.dateFormats.month),
-          isToday: startPeriod.isSame(moment().startOf('month')),
+          isToday: startPeriod.isSame(today ? moment(today).startOf('month') : moment().startOf('month')),
           events: periodEvents,
           date: startPeriod,
           badgeTotal: getBadgeTotal(periodEvents)
@@ -2858,7 +2845,7 @@ angular
       return event;
     }
 
-    function getMonthView(events, viewDate, cellModifier) {
+    function getMonthView(events, viewDate, cellModifier, today) {
 
       // hack required to work with the calendar-utils api
       events.forEach(function(event) {
@@ -2879,6 +2866,9 @@ angular
         day.date = moment(day.date);
         day.label = day.date.date();
         day.badgeTotal = getBadgeTotal(day.events);
+        if (today) {
+          day.isToday = day.date.isSame(today, 'day');
+        }
         if (!calendarConfig.displayAllMonthEvents && !day.inMonth) {
           day.events = [];
         }

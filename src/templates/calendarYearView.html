@@ -2,32 +2,28 @@
   <div ng-repeat="rowOffset in [0, 2, 4, 6, 8, 10] track by rowOffset">
     <div class="row cal-before-eventlist">
       <div
-        class="col-md-6 col-xs-12 cal-cell {{ day.cssClass }}"
-        ng-repeat="month in vm.view | calendarLimitTo:2:rowOffset track by $index"
-        ng-init="monthIndex = vm.view.indexOf(month)"
-        ng-class="{pointer: month.events.length > 0, 'cal-day-today': month.isToday}"
-        mwl-droppable
-        on-drop="vm.handleEventDrop(dropData.event, month.date)">
+        class="col-md-6 col-xs-12 {{ day.cssClass }}"
+        ng-repeat="month in vm.view | calendarLimitTo:2:rowOffset track by $index">
 
-        <div
-          class="text-center"
-          data-cal-date
-          ng-click="vm.calendarCtrl.dateClicked(month.date)"
-          ng-bind="month.label">
-        </div>        
+        <div class="text-center month-label">
+          <span ng-bind="month.label" 
+            ng-click="vm.calendarCtrl.dateClicked(month.date)" 
+            data-cal-date></span>
+        </div>  
 
-        <mwl-calendar
-          events="month.events"
-          view="::'month'"
-          view-date="::month.date"          
+        <mwl-calendar-month
+          events="vm.events"
+          view-date="month.date"
           on-event-click="vm.onEventClick"
           on-event-times-changed="vm.onEventTimesChanged"
           on-timespan-click="vm.onTimespanClick"
           on-date-range-select="vm.onDateRangeSelect"
           cell-modifier="vm.cellModifier"
+          custom-template-urls="vm.customTemplateUrls"
           template-scope="vm.templateScope"
-          dont-watch>
-        </mwl-calendar>
+          draggable-auto-scroll="vm.draggableAutoScroll"
+          today="vm.today">
+        </mwl-calendar-month>
 
       </div>
     </div>

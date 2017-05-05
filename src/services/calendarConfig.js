@@ -11,7 +11,7 @@ angular
           hour: 'ha',
           day: 'd MMM',
           month: 'MMMM',
-          weekDay: 'EEEE',
+          weekDay: 'EEE',
           time: 'HH:mm',
           datetime: 'MMM d, h:mm a'
         },
@@ -27,7 +27,7 @@ angular
           hour: 'ha',
           day: 'D MMM',
           month: 'MMMM',
-          weekDay: 'dddd',
+          weekDay: 'ddd',
           time: 'HH:mm',
           datetime: 'MMM D, h:mm a'
         },
@@ -45,7 +45,7 @@ angular
     get titleFormats() {
       return this.allDateFormats[this.dateFormatter].title;
     },
-    dateFormatter: 'angular',
+    dateFormatter: 'moment',
     showTimesOnWeekView: false,
     displayAllMonthEvents: true,
     i18nStrings: {
