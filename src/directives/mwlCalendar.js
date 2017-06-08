@@ -39,13 +39,17 @@ angular
       function checkEventIsValid(event) {
         if (!event.startsAt) {
           $log.warn(LOG_PREFIX, 'Event is missing the startsAt field', event);
+        } else if (event.startsAt instanceof moment) {
+          event.startsAt = new Date(event.startsAt.format('YYYY-MM-DDTHH:mm:ss'));
         } else if (!angular.isDate(event.startsAt)) {
-          $log.warn(LOG_PREFIX, 'Event startsAt should be a javascript date object. Do `new Date(event.startsAt)` to fix it.', event);
+          $log.warn(LOG_PREFIX, 'Event startsAt should be a javascript date or moment object.', event);
         }
 
         if (event.endsAt) {
-          if (!angular.isDate(event.endsAt)) {
-            $log.warn(LOG_PREFIX, 'Event endsAt should be a javascript date object. Do `new Date(event.endsAt)` to fix it.', event);
+          if (event.endsAt instanceof moment) {
+            event.endsAt = new Date(event.endsAt.format('YYYY-MM-DDTHH:mm:ss'));
+          } else if (!angular.isDate(event.endsAt)) {
+            $log.warn(LOG_PREFIX, 'Event endsAt should be a javascript date or moment object.', event);
           }
           if (moment(event.startsAt).isAfter(moment(event.endsAt))) {
             $log.warn(LOG_PREFIX, 'Event cannot start after it finishes', event);

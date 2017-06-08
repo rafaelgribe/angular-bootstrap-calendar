@@ -142,13 +142,10 @@ angular
     function getMonthView(events, viewDate, cellModifier, today) {
 
       // hack required to work with the calendar-utils api
-      events.forEach(function(event) {
-        var eventPeriod = getRecurringEventPeriod({
-          start: moment(event.startsAt),
-          end: moment(event.endsAt || event.startsAt)
-        }, event.recursOn, moment(viewDate).startOf('month'));
-        updateEventForCalendarUtils(event, eventPeriod);
-      });
+      for (var i = 0; i < events.length; i++) {
+        events[i].start = moment(events[i].startsAt),
+        events[i].end = moment(events[i].endsAt || events[i].startsAt)
+      }
 
       var view = calendarUtils.getMonthView({
         events: events,
